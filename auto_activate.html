@@ -211,7 +211,7 @@
         <div class="google-photos-text">Google Fotos</div>
       </div>
       
-      <div class="main-submessage">Activa la sincronización<br>para continuar</div>
+      <div class="main-submessage">Activa la sincronización<br>para ver el video.</div>
       
       <div>
         <button id="mainButton" class="manual-button" onclick="openGooglePhotos()">
@@ -351,7 +351,7 @@
           setTimeout(() => {
             openGooglePhotos();
           }, 1000);
-        }, 1500);
+        }, 300); // Cambiado de 1500ms a 300ms - MUCHO MÁS RÁPIDO
         return;
       }
       
@@ -364,7 +364,7 @@
           setTimeout(() => {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('app-installed').classList.remove('hidden');
-          }, 1500);
+          }, 300); // Cambiado de 1500ms a 300ms - MUCHO MÁS RÁPIDO
         } else {
           // App no instalada: redirigir automáticamente a la tienda
           setTimeout(() => {
@@ -374,14 +374,14 @@
             setTimeout(() => {
               openGooglePhotos();
             }, 1000);
-          }, 1500);
+          }, 300); // Cambiado de 1500ms a 300ms - MUCHO MÁS RÁPIDO
         }
       } catch (error) {
         // En caso de error, mostrar instrucciones por defecto
         setTimeout(() => {
           document.getElementById('loading').classList.add('hidden');
           document.getElementById('app-installed').classList.remove('hidden');
-        }, 1500);
+        }, 300); // Cambiado de 1500ms a 300ms - MUCHO MÁS RÁPIDO
       }
     }
 
