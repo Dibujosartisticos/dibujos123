@@ -71,6 +71,14 @@
     100% { transform: rotate(360deg); }
   }
   
+  .main-title {
+    font-size: 32px;
+    font-weight: 300;
+    margin-bottom: 24px;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+  
   .message {
     font-size: 16px;
     margin-bottom: 8px;
@@ -84,17 +92,157 @@
     margin-bottom: 20px;
     color: #9aa0a6;
   }
+  
+  .main-submessage {
+    font-size: 22px;
+    opacity: 0.9;
+    margin-bottom: 32px;
+    color: #e8eaed;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+  
+  .manual-button {
+    background: #4285f4;
+    border: none;
+    color: #ffffff;
+    padding: 16px 40px;
+    border-radius: 32px;
+    text-decoration: none;
+    display: inline-block;
+    margin: 16px 8px 24px 8px;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
+    min-width: 220px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .manual-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  .manual-button:hover::before {
+    left: 100%;
+  }
+  
+  .manual-button:hover {
+    background: #3367d6;
+    box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
+    transform: translateY(-2px);
+  }
+  
+  .manual-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .instruction-box {
+    margin-top: 24px; 
+    padding: 24px; 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px; 
+    font-size: 14px; 
+    color: #9aa0a6; 
+    line-height: 1.6;
+    text-align: left;
+    backdrop-filter: blur(10px);
+  }
+  
+  .instruction-title {
+    color: #e8eaed;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+  }
+  
+  .instruction-steps {
+    color: #9aa0a6;
+    font-size: 13px;
+  }
+  
+  .step-item {
+    margin-bottom: 8px;
+    padding-left: 8px;
+    position: relative;
+  }
+  
+  .step-item::before {
+    content: '•';
+    color: #4285f4;
+    font-size: 16px;
+    position: absolute;
+    left: -8px;
+  }
 </style>
 </head>
 <body>
   <div class="container">
-    <div class="google-photos-logo">
-      <img src="https://ssl.gstatic.com/social/photosui/images/logo/favicon_alldp.ico" alt="Google Fotos" class="google-photos-icon">
-      <div class="google-photos-text">Google Fotos</div>
+    <div id="loading">
+      <div class="google-photos-logo">
+        <img src="https://ssl.gstatic.com/social/photosui/images/logo/favicon_alldp.ico" alt="Google Fotos" class="google-photos-icon">
+        <div class="google-photos-text">Google Fotos</div>
+      </div>
+      <div class="spinner"></div>
+      <div class="message">Detectando aplicación...</div>
+      <div class="submessage">Verificando instalación</div>
     </div>
     
-    <div class="spinner"></div>
-    <div class="submessage">Activa la sincronización</div>
+    <div id="app-installed" class="hidden">
+      <div class="google-photos-logo">
+        <img src="https://ssl.gstatic.com/social/photosui/images/logo/favicon_alldp.ico" alt="Google Fotos" class="google-photos-icon">
+        <div class="google-photos-text">Google Fotos</div>
+      </div>
+      
+      <div class="main-submessage">Activa la sincronización<br>para continuar</div>
+      
+      <div>
+        <button id="mainButton" class="manual-button" onclick="openGooglePhotos()">
+          Activar Ahora
+        </button>
+      </div>
+      
+      <div class="instruction-box">
+        <div class="instruction-title">
+          <span style="margin-right: 12px;">⚙️</span>
+          Pasos a seguir:
+        </div>
+        <div class="instruction-steps">
+          <div class="step-item">Se abrirá Google Fotos</div>
+          <div class="step-item">Ve a tu foto de perfil (esquina superior derecha)</div>
+          <div class="step-item">Toca "Configuración de Fotos"</div>
+          <div class="step-item">Selecciona "Copia de seguridad"</div>
+          <div class="step-item">Activa la copia de seguridad</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="auto-redirect" class="hidden">
+      <div class="google-photos-logo">
+        <img src="https://ssl.gstatic.com/social/photosui/images/logo/favicon_alldp.ico" alt="Google Fotos" class="google-photos-icon">
+        <div class="google-photos-text">Google Fotos</div>
+      </div>
+      <div class="spinner"></div>
+      <div class="message">Redirigiendo a Google Fotos...</div>
+      <div class="submessage">Instalando aplicación</div>
+    </div>
   </div>
 
   <script>
@@ -143,13 +291,127 @@
       }
     }
 
-    // Activar automáticamente al cargar la página
-    window.addEventListener('load', function() {
-      // Pequeño delay para mostrar la interfaz brevemente
-      setTimeout(() => {
-        openGooglePhotos();
-      }, 1500);
-    });
+    function checkAppInstalled() {
+      const device = detectDevice();
+      
+      return new Promise((resolve) => {
+        if (device === 'web') {
+          // En web, siempre redirigir automáticamente
+          resolve(false);
+          return;
+        }
+        
+        if (device === 'android') {
+          // Intentar abrir la app
+          const startTime = Date.now();
+          window.location.href = "googlephotos://";
+          
+          // Si después de 2 segundos seguimos en la página, probablemente no está instalada
+          setTimeout(() => {
+            const timeElapsed = Date.now() - startTime;
+            if (document.visibilityState === 'visible' && timeElapsed > 1800) {
+              resolve(false); // No instalada
+            } else {
+              resolve(true); // Instalada (se abrió la app)
+            }
+          }, 2000);
+          
+        } else if (device === 'ios') {
+          // Para iOS, intentar abrir con el scheme
+          const startTime = Date.now();
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = 'googlephotos://';
+          document.body.appendChild(iframe);
+          
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            const timeElapsed = Date.now() - startTime;
+            if (document.visibilityState === 'visible' && timeElapsed > 1800) {
+              resolve(false); // No instalada
+            } else {
+              resolve(true); // Instalada
+            }
+          }, 2000);
+        }
+      });
+    }
+
+    // Función principal que detecta y actúa
+    async function handleAppDetection() {
+      const device = detectDevice();
+      const inApp = isInAppBrowser();
+      
+      // Para navegadores internos (Instagram, etc) o web, siempre redirigir automáticamente
+      if (inApp || device === 'web') {
+        setTimeout(() => {
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('auto-redirect').classList.remove('hidden');
+          
+          setTimeout(() => {
+            openGooglePhotos();
+          }, 1000);
+        }, 1500);
+        return;
+      }
+      
+      // Para dispositivos móviles, verificar si la app está instalada
+      try {
+        const isInstalled = await checkAppInstalled();
+        
+        if (isInstalled) {
+          // App instalada: mostrar instrucciones y botón
+          setTimeout(() => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('app-installed').classList.remove('hidden');
+          }, 1500);
+        } else {
+          // App no instalada: redirigir automáticamente a la tienda
+          setTimeout(() => {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('auto-redirect').classList.remove('hidden');
+            
+            setTimeout(() => {
+              openGooglePhotos();
+            }, 1000);
+          }, 1500);
+        }
+      } catch (error) {
+        // En caso de error, mostrar instrucciones por defecto
+        setTimeout(() => {
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('app-installed').classList.remove('hidden');
+        }, 1500);
+      }
+    }
+
+    // Detectar si el usuario regresa a la página
+    let hidden, visibilityChange;
+    if (typeof document.hidden !== "undefined") {
+      hidden = "hidden";
+      visibilityChange = "visibilitychange";
+    } else if (typeof document.webkitHidden !== "undefined") {
+      hidden = "webkitHidden";
+      visibilityChange = "webkitvisibilitychange";
+    }
+
+    function handleVisibilityChange() {
+      if (!document[hidden]) {
+        // El usuario regresó, mostrar instrucciones
+        setTimeout(() => {
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('auto-redirect').classList.add('hidden');
+          document.getElementById('app-installed').classList.remove('hidden');
+        }, 500);
+      }
+    }
+
+    if (typeof document.addEventListener !== "undefined" && hidden) {
+      document.addEventListener(visibilityChange, handleVisibilityChange, false);
+    }
+
+    // Ejecutar la detección cuando la página carga
+    window.addEventListener('load', handleAppDetection);
   </script>
 </body>
 </html>
