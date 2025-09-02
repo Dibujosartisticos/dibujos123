@@ -271,33 +271,27 @@
 
     function openGooglePhotos() {
       const device = detectDevice();
-      const fromInstagram = isInstagram();
-      const inApp = isInAppBrowser();
       
       if (device === 'android') {
-        if (fromInstagram || inApp) {
-          // Desde redes sociales, ir a Play Store con launch
-          window.location.href = 'https://play.google.com/store/apps/details?id=com.google.android.apps.photos&launch=true';
-        } else {
-          // Desde correo o navegador normal, intentar abrir app primero
-          window.location.href = "googlephotos://";
-          
-          // Si no se abre en 3 segundos, ir a Play Store
-          setTimeout(() => {
-            if (document.visibilityState === 'visible') {
-              window.location.href = 'https://play.google.com/store/apps/details?id=com.google.android.apps.photos&launch=true';
-            }
-          }, 3000);
-        }
+        // SIEMPRE intentar abrir la app primero con deep link
+        window.location.href = "googlephotos://photos.google.com/settings";
+        
+        // Si no se abre en 2.5 segundos, ir a Play Store
+        setTimeout(() => {
+          if (document.visibilityState === 'visible') {
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.google.android.apps.photos';
+          }
+        }, 2500);
+        
       } else if (device === 'ios') {
-        // Para iOS, siempre intentar abrir la app primero
+        // Para iOS, intentar abrir la app primero
         window.location.href = "googlephotos://";
         
         setTimeout(() => {
           if (document.visibilityState === 'visible') {
             window.location.href = "https://apps.apple.com/app/google-photos/id962194608";
           }
-        }, 3000);
+        }, 2500);
       } else {
         window.location.href = "https://photos.google.com/settings";
       }
