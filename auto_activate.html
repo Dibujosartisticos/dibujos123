@@ -265,7 +265,8 @@
 
     function isInAppBrowser() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
-      return /FBAN|FBAV|Instagram|Twitter|LinkedIn|WhatsApp/i.test(ua);
+      // Detectar navegadores internos más específicamente
+      return /FBAN|FBAV|Instagram|Twitter|LinkedIn|WhatsApp|Line|Telegram|Snapchat|TikTok/i.test(ua);
     }
 
     function openGooglePhotos() {
@@ -302,37 +303,79 @@
         }
         
         if (device === 'android') {
-          // Intentar abrir la app
+          // Método más robusto para Android
+          let appDetected = false;
           const startTime = Date.now();
-          window.location.href = "googlephotos://";
           
-          // Si después de 2 segundos seguimos en la página, probablemente no está instalada
-          setTimeout(() => {
-            const timeElapsed = Date.now() - startTime;
-            if (document.visibilityState === 'visible' && timeElapsed > 1800) {
-              resolve(false); // No instalada
-            } else {
-              resolve(true); // Instalada (se abrió la app)
+          // Crear un enlace invisible y intentar abrir la app
+          const link = document.createElement('a');
+          link.href = 'googlephotos://';
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          
+          // Detectar si la página se oculta (indica que la app se abrió)
+          const handleVisibilityChange = () => {
+            if (document.hidden || document.visibilityState === 'hidden') {
+              appDetected = true;
+              resolve(true);
             }
-          }, 2000);
+          };
+          
+          document.addEventListener('visibilitychange', handleVisibilityChange);
+          document.addEventListener('webkitvisibilitychange', handleVisibilityChange);
+          
+          // Hacer clic en el enlace
+          link.click();
+          document.body.removeChild(link);
+          
+          // Si después de 2.5 segundos no se detectó la app, asumir que no está instalada
+          setTimeout(() => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener('webkitvisibilitychange', handleVisibilityChange);
+            
+            if (!appDetected) {
+              resolve(false); // No instalada
+            }
+          }, 2500);
           
         } else if (device === 'ios') {
-          // Para iOS, intentar abrir con el scheme
+          // Método mejorado para iOS
+          let appDetected = false;
           const startTime = Date.now();
+          
+          // Detectar si la página se oculta (indica que la app se abrió)
+          const handleVisibilityChange = () => {
+            if (document.hidden || document.visibilityState === 'hidden') {
+              appDetected = true;
+              resolve(true);
+            }
+          };
+          
+          document.addEventListener('visibilitychange', handleVisibilityChange);
+          document.addEventListener('webkitvisibilitychange', handleVisibilityChange);
+          
+          // Intentar abrir con el scheme usando múltiples métodos
           const iframe = document.createElement('iframe');
           iframe.style.display = 'none';
           iframe.src = 'googlephotos://';
           document.body.appendChild(iframe);
           
+          // También intentar con window.location como fallback
+          setTimeout(() => {
+            if (!appDetected) {
+              window.location.href = 'googlephotos://';
+            }
+          }, 100);
+          
           setTimeout(() => {
             document.body.removeChild(iframe);
-            const timeElapsed = Date.now() - startTime;
-            if (document.visibilityState === 'visible' && timeElapsed > 1800) {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener('webkitvisibilitychange', handleVisibilityChange);
+            
+            if (!appDetected) {
               resolve(false); // No instalada
-            } else {
-              resolve(true); // Instalada
             }
-          }, 2000);
+          }, 2500);
         }
       });
     }
