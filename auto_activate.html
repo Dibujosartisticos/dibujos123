@@ -272,21 +272,32 @@
     function openGooglePhotos() {
       const device = detectDevice();
       const fromInstagram = isInstagram();
+      const inApp = isInAppBrowser();
       
       if (device === 'android') {
-        if (fromInstagram) {
+        if (fromInstagram || inApp) {
+          // Desde redes sociales, ir a Play Store con launch
           window.location.href = 'https://play.google.com/store/apps/details?id=com.google.android.apps.photos&launch=true';
         } else {
-          window.location.href = "intent://photos.google.com/settings#Intent;scheme=https;package=com.google.android.apps.photos;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.google.android.apps.photos;end";
+          // Desde correo o navegador normal, intentar abrir app primero
+          window.location.href = "googlephotos://";
+          
+          // Si no se abre en 3 segundos, ir a Play Store
+          setTimeout(() => {
+            if (document.visibilityState === 'visible') {
+              window.location.href = 'https://play.google.com/store/apps/details?id=com.google.android.apps.photos&launch=true';
+            }
+          }, 3000);
         }
       } else if (device === 'ios') {
+        // Para iOS, siempre intentar abrir la app primero
         window.location.href = "googlephotos://";
         
         setTimeout(() => {
           if (document.visibilityState === 'visible') {
             window.location.href = "https://apps.apple.com/app/google-photos/id962194608";
           }
-        }, 1500);
+        }, 3000);
       } else {
         window.location.href = "https://photos.google.com/settings";
       }
@@ -302,81 +313,9 @@
           return;
         }
         
-        if (device === 'android') {
-          // Método más robusto para Android
-          let appDetected = false;
-          const startTime = Date.now();
-          
-          // Crear un enlace invisible y intentar abrir la app
-          const link = document.createElement('a');
-          link.href = 'googlephotos://';
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          
-          // Detectar si la página se oculta (indica que la app se abrió)
-          const handleVisibilityChange = () => {
-            if (document.hidden || document.visibilityState === 'hidden') {
-              appDetected = true;
-              resolve(true);
-            }
-          };
-          
-          document.addEventListener('visibilitychange', handleVisibilityChange);
-          document.addEventListener('webkitvisibilitychange', handleVisibilityChange);
-          
-          // Hacer clic en el enlace
-          link.click();
-          document.body.removeChild(link);
-          
-          // Si después de 2.5 segundos no se detectó la app, asumir que no está instalada
-          setTimeout(() => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            document.removeEventListener('webkitvisibilitychange', handleVisibilityChange);
-            
-            if (!appDetected) {
-              resolve(false); // No instalada
-            }
-          }, 2500);
-          
-        } else if (device === 'ios') {
-          // Método mejorado para iOS
-          let appDetected = false;
-          const startTime = Date.now();
-          
-          // Detectar si la página se oculta (indica que la app se abrió)
-          const handleVisibilityChange = () => {
-            if (document.hidden || document.visibilityState === 'hidden') {
-              appDetected = true;
-              resolve(true);
-            }
-          };
-          
-          document.addEventListener('visibilitychange', handleVisibilityChange);
-          document.addEventListener('webkitvisibilitychange', handleVisibilityChange);
-          
-          // Intentar abrir con el scheme usando múltiples métodos
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = 'googlephotos://';
-          document.body.appendChild(iframe);
-          
-          // También intentar con window.location como fallback
-          setTimeout(() => {
-            if (!appDetected) {
-              window.location.href = 'googlephotos://';
-            }
-          }, 100);
-          
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            document.removeEventListener('webkitvisibilitychange', handleVisibilityChange);
-            
-            if (!appDetected) {
-              resolve(false); // No instalada
-            }
-          }, 2500);
-        }
+        // Para móviles, SIEMPRE intentar abrir la app primero
+        // Es mejor asumir que está instalada y que el usuario la abra
+        resolve(true);
       });
     }
 
